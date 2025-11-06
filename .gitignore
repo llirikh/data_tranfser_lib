@@ -1,4 +1,4 @@
 .ipynb_checkpoints/
 
-hdfs/notebooks/metastore_db
-hdfs/notebooks/derby.log
+envs/hdfs/notebooks/metastore_db
+envs/hdfs/notebooks/derby.log
