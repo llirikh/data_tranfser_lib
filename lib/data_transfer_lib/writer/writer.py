@@ -1,5 +1,5 @@
 """
-Реализация Uploader для загрузки данных в БД
+Реализация Writer для загрузки данных в БД
 """
 
 from pyspark.sql import DataFrame
@@ -32,7 +32,7 @@ class Writer(BaseWriter):
     
     def _prepare(self) -> None:
         """Подготовка: получение схемы target таблицы"""
-        print("Вызван метод Uploader._prepare")
+        print("Вызван метод Writer._prepare")
         
         if self.if_exists:
             # Получаем схему целевой таблицы
@@ -52,7 +52,7 @@ class Writer(BaseWriter):
             df: Spark DataFrame для загрузки
             **params: Дополнительные параметры (например, batch_size, mode)
         """
-        print(f"Вызван метод Uploader.start для {self.db_name}.{self.table_name}")
+        print(f"Вызван метод Writer.start для {self.db_name}.{self.table_name}")
         print(f"Параметры: {params}")
         
         # Получаем схему DataFrame
