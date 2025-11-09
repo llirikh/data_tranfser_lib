@@ -42,7 +42,7 @@ services:
   
   jupyter:
     build:
-      context: ./jupyter
+      context: ../jupyter
       dockerfile: Dockerfile
     container_name: jupyter
     hostname: jupyter
