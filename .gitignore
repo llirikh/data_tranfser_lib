@@ -2,3 +2,7 @@
 
 envs/hdfs/notebooks/metastore_db
 envs/hdfs/notebooks/derby.log
+
+.venv/
+data_transfer_lib.egg-info/
+__pycache__/

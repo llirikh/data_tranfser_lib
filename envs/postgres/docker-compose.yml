@@ -93,6 +93,7 @@ services:
       - "8888:8888"
     volumes:
       - ./notebooks:/home/jovyan/work
+      - ../../lib:/home/jovyan/lib
     networks:
       - spark-net
 
