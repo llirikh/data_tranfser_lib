@@ -79,6 +79,10 @@ services:
       - "8888:8888"
     volumes:
       - ./notebooks:/home/jovyan/work
+      - ../../lib:/home/jovyan/lib/data_transfer_lib
+      - ../../requirements.txt:/home/jovyan/lib/requirements.txt
+      - ../../setup.py:/home/jovyan/lib/setup.py
+      - ../../README.md:/home/jovyan/lib/README.md
     networks:
       - spark-net
 
