@@ -1,17 +1,9 @@
-"""
-Базовый класс для всех коннекторов БД
-"""
-
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, Any
 from pyspark.sql import SparkSession
 
 
 class BaseConnection(ABC):
-    """
-    Абстрактный базовый класс для подключений к БД
-    """
-    
     def __init__(
         self,
         host: str,
@@ -20,7 +12,6 @@ class BaseConnection(ABC):
         password: str,
         database: Optional[str] = None,
         spark: Optional[SparkSession] = None,
-        **kwargs
     ):
         self.host = host
         self.port = port
@@ -28,7 +19,6 @@ class BaseConnection(ABC):
         self.password = password
         self.database = database
         self.spark = spark or self._get_or_create_spark()
-        self.extra_params = kwargs
         
         print(f"Инициализирован {self.__class__.__name__}")
         self._validate_connection_params()

@@ -1,7 +1,3 @@
-"""
-Базовый класс для чтения данных
-"""
-
 from abc import ABC, abstractmethod
 from typing import Optional, Any
 from pyspark.sql import DataFrame

@@ -1,17 +1,9 @@
-"""
-Коннектор для ClickHouse
-"""
-
 from typing import Dict, Any, Optional
 from pyspark.sql import SparkSession
 from data_transfer_lib.connections.base import BaseConnection
 
 
 class ClickHouse(BaseConnection):
-    """
-    Класс для подключения к ClickHouse
-    """
-    
     def __init__(
         self,
         host: str,
@@ -37,17 +29,14 @@ class ClickHouse(BaseConnection):
         )
     
     def _validate_connection_params(self) -> None:
-        """Валидация параметров подключения"""
-        print("Вызван метод ClickHouse._validate_connection_params")
+        print("Валидация параметров подключения")
     
     def get_jdbc_url(self) -> str:
-        """Получить JDBC URL для ClickHouse"""
-        print("Вызван метод ClickHouse.get_jdbc_url")
+        print("Получить JDBC URL для ClickHouse")
         return f"jdbc:clickhouse://{self.host}:{self.http_port}/{self.database}"
     
     def get_connection_properties(self) -> Dict[str, str]:
-        """Получить свойства подключения"""
-        print("Вызван метод ClickHouse.get_connection_properties")
+        print("Получить свойства подключени")
         return {
             "user": self.user,
             "password": self.password,
@@ -55,11 +44,10 @@ class ClickHouse(BaseConnection):
         }
     
     def test_connection(self) -> bool:
-        """Проверка подключения к ClickHouse"""
-        print("Вызван метод ClickHouse.test_connection")
+        print("Проверка подключения к ClickHouse")
         return True
     
     def get_table_schema(self, db_name: str, table_name: str) -> Dict[str, Any]:
         """Получить схему таблицы из ClickHouse"""
-        print(f"Вызван метод ClickHouse.get_table_schema для {db_name}.{table_name}")
+        print(f"Получить схему таблицы из ClickHouse для {db_name}.{table_name}")
         return {}
