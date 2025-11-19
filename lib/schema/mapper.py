@@ -30,6 +30,7 @@ class TypeMapper:
         "DateType": "Date",
         "BooleanType": "UInt8",
     }
+
     
     @classmethod
     def postgres_to_spark(cls, pg_type: str) -> str:

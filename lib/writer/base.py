@@ -10,13 +10,11 @@ class BaseWriter(ABC):
         db_name: str,
         table_name: str,
         if_exists: bool = True,
-        **kwargs
     ):
         self.connection = connection
         self.db_name = db_name
         self.table_name = table_name
         self.if_exists = if_exists
-        self.extra_params = kwargs
         
         self._prepare()
     

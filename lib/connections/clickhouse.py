@@ -11,13 +11,8 @@ class ClickHouse(BaseConnection):
         password: str,
         database: str = "default",
         port: int = 8123,
-        http_port: int = 8123,
-        native_port: int = 9000,
-        spark: Optional[SparkSession] = None,
-        **kwargs
+        spark: Optional[SparkSession] = None
     ):
-        self.http_port = http_port
-        self.native_port = native_port
         super().__init__(
             host=host,
             port=port,
@@ -25,11 +20,10 @@ class ClickHouse(BaseConnection):
             password=password,
             database=database,
             spark=spark,
-            **kwargs
         )
     
     def get_jdbc_url(self) -> str:
-        return f"jdbc:clickhouse://{self.host}:{self.http_port}/{self.database}"
+        return f"jdbc:clickhouse://{self.host}:{self.port}/{self.database}"
     
     def get_connection_properties(self) -> Dict[str, str]:
         return {
@@ -42,5 +36,32 @@ class ClickHouse(BaseConnection):
         return True
     
     def get_table_schema(self, db_name: str, table_name: str) -> Dict[str, Any]:
-        print(f"Получить схему таблицы из ClickHouse для {db_name}.{table_name}")
-        return {}
+        schema_query = f"""
+            SELECT 
+                name,
+                type
+            FROM system.columns
+            WHERE database = '{db_name}' 
+                AND table = '{table_name}'
+            ORDER BY position
+        """
+
+        # TODO: try -> except
+        schema_df = (
+            self.spark.read
+            .format("jdbc")
+            .option("url", self.get_jdbc_url())
+            .option("query", schema_query)
+            .option("user", self.user)
+            .option("password", self.password)
+            .option("driver", "com.clickhouse.jdbc.ClickHouseDriver")
+            .load()
+        )
+
+        schema_dict = {}
+        for row in schema_df.collect():
+            column_name = row['name']
+            column_type = row['type']
+            schema_dict[column_name] = column_type
+        
+        return schema_dict

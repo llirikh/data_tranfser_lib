@@ -11,7 +11,6 @@ class Writer(BaseWriter):
         db_name: str,
         table_name: str,
         if_exists: bool = True,
-        **params
     ):
         self.target_schema = None
         super().__init__(
@@ -19,46 +18,55 @@ class Writer(BaseWriter):
             db_name=db_name,
             table_name=table_name,
             if_exists=if_exists,
-            **params
         )
     
     def _prepare(self) -> None:
         
         if self.if_exists:
-            # Получаем схему целевой таблицы
             self.target_schema = self.connection.get_table_schema(
                 self.db_name,
                 self.table_name
             )
-            print(f"Получена схема target таблицы {self.db_name}.{self.table_name}")
+            print(self.target_schema)
         else:
-            print("ОШИБКА: Функционал создания таблицы пока не реализован")
+            error_msg = f"{self.db_name}.{self.table_name} table does't exist"
+            raise DataTransferException(error_msg)
     
     def start(self, df: DataFrame, **params) -> None:
-        """
-        Запуск загрузки данных в БД
+
+        df_schema = {}
+        for field in df.schema.fields:
+            df_schema[field.name] = str(field.dataType)
+
+        try:
+            SchemaValidator.validate_spark_to_target(
+                df_schema,
+                self.target_schema
+            )
+        except SchemaValidationException as e:
+            print(f"Error: {e}")
+            raise
         
-        Args:
-            df: Spark DataFrame для загрузки
-            **params: Дополнительные параметры (например, batch_size, mode)
-        """
-        print(f"Вызван метод Writer.start для {self.db_name}.{self.table_name}")
-        print(f"Параметры: {params}")
+        try:
+            if num_partitions := params.get("num_partitions", None):
+                df = df.repartition(num_partitions)
+            
+            full_table_name = f"{self.db_name}.{self.table_name}"
+            
+            writer = (
+                df.write
+                .format("jdbc")
+                .option("url", self.connection.get_jdbc_url())
+                .option("dbtable", full_table_name)
+                .option("user", self.connection.user)
+                .option("password", self.connection.password)
+                .option("driver", self.connection.get_connection_properties()["driver"])
+                .option("batchsize", params.get("batch_size", 10000))
+                .mode(params.get("mode", "append"))
+            )
+            
+            writer.save()
+            
+        except Exception as e:
+            raise ConnectionException(f"Couldn't write int table: {e}")
         
-        # Получаем схему DataFrame
-        df_schema = {}  # df.schema преобразованная в dict
-        
-        # Валидируем совместимость схем
-        is_valid = SchemaValidator.validate_spark_to_target(
-            df_schema,
-            self.target_schema
-        )
-        
-        if not is_valid:
-            print("ОШИБКА: Невозможно записать данные без потери информации")
-            return
-        
-        # Здесь будет логика записи через Spark JDBC
-        # df.write.jdbc(...)
-        
-        print("Данные успешно загружены (заглушка)")
