@@ -22,14 +22,10 @@ class Postgres(BaseConnection):
             spark=spark,
         )
     
-    def _validate_connection_params(self) -> None:
-        print("Валидация параметров подключения")
-    
     def get_jdbc_url(self) -> str:
         return f"jdbc:postgresql://{self.host}:{self.port}/{self.database}"
     
     def get_connection_properties(self) -> Dict[str, str]:
-        print("Получить свойства подключения")
         return {
             "user": self.user,
             "password": self.password,
@@ -41,5 +37,46 @@ class Postgres(BaseConnection):
         return True
     
     def get_table_schema(self, db_name: str, table_name: str) -> Dict[str, Any]:
-        print(f"Получить схему таблицы из PostgreSQL для {db_name}.{table_name}")
-        return {}
+
+        schema_query = f"""
+            SELECT 
+                column_name,
+                data_type,
+                character_maximum_length,
+                numeric_precision,
+                numeric_scale
+            FROM information_schema.columns
+            WHERE table_schema = 'public' 
+                AND table_name = '{table_name}'
+            ORDER BY ordinal_position
+        """
+
+        # TODO: try -> except 
+
+        schema_df = ( 
+            self.spark.read
+            .format("jdbc")
+            .option("url", self.get_jdbc_url())
+            .option("query", schema_query)
+            .option("user", self.user)
+            .option("password", self.password)
+            .option("driver", "org.postgresql.Driver")
+            .load()
+        )
+
+        schema_dict = {}
+        for row in schema_df.collect():
+            column_name = row['column_name']
+            data_type = row['data_type']
+            
+            # Add precision and scale
+            if data_type in ('numeric', 'decimal') and row['numeric_precision']:
+                data_type = f"{data_type}({row['numeric_precision']},{row['numeric_scale']})"
+
+            # Add max_length
+            elif data_type in ('character varying', 'varchar') and row['character_maximum_length']:
+                data_type = f"varchar({row['character_maximum_length']})"
+            
+            schema_dict[column_name] = data_type
+        
+        return schema_dict

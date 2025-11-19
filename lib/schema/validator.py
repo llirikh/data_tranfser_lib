@@ -1,23 +1,28 @@
-"""
-Валидатор схем данных
-"""
-
 from typing import Dict, Any
 from pyspark.sql import DataFrame
 from data_transfer_lib.utils.exceptions import SchemaValidationException
+from data_transfer_lib.schema.mapper import TypeMapper
 
 
 class SchemaValidator:
-    """
-    Класс для валидации схем
-    """
-    
+
     @staticmethod
     def validate_source_to_spark(source_schema: Dict[str, Any]) -> bool:
-        """
-        Проверка возможности загрузки из источника в Spark без потери данных
-        """
-        print("Вызван метод SchemaValidator.validate_source_to_spark")
+        unsupported_types = []
+        
+        for column, pg_type in source_schema.items():
+            base_type = pg_type.split('(')[0].strip().lower()
+            spark_type = TypeMapper.postgres_to_spark(base_type)
+            
+            if spark_type == "StringType" and base_type not in TypeMapper.POSTGRES_TO_SPARK:
+                unsupported_types.append(f"{column}: {pg_type}")
+        
+        if unsupported_types:
+            error_msg = f"Error:\n Unsupported types detected: {', '.join(unsupported_types)}"
+            raise SchemaValidationException(error_msg)
+        
+        print("Validation succeeded")
+
         return True
     
     @staticmethod
@@ -25,9 +30,6 @@ class SchemaValidator:
         df_schema: Dict[str, Any],
         target_schema: Dict[str, Any]
     ) -> bool:
-        """
-        Проверка возможности записи из Spark в target без потери данных
-        """
         print("Вызван метод SchemaValidator.validate_spark_to_target")
         return True
     
@@ -36,8 +38,5 @@ class SchemaValidator:
         source_schema: Dict[str, Any],
         target_schema: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """
-        Сравнение двух схем и возврат различий
-        """
         print("Вызван метод SchemaValidator.compare_schemas")
         return {}

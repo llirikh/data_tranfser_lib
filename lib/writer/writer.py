@@ -1,7 +1,3 @@
-"""
-Реализация Writer для загрузки данных в БД
-"""
-
 from pyspark.sql import DataFrame
 from data_transfer_lib.writer.base import BaseWriter
 from data_transfer_lib.connections.base import BaseConnection
@@ -9,10 +5,6 @@ from data_transfer_lib.schema.validator import SchemaValidator
 
 
 class Writer(BaseWriter):
-    """
-    Класс для загрузки данных из Spark DataFrame в БД
-    """
-    
     def __init__(
         self,
         connection: BaseConnection,
@@ -31,8 +23,6 @@ class Writer(BaseWriter):
         )
     
     def _prepare(self) -> None:
-        """Подготовка: получение схемы target таблицы"""
-        print("Вызван метод Writer._prepare")
         
         if self.if_exists:
             # Получаем схему целевой таблицы

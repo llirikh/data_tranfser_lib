@@ -28,15 +28,10 @@ class ClickHouse(BaseConnection):
             **kwargs
         )
     
-    def _validate_connection_params(self) -> None:
-        print("Валидация параметров подключения")
-    
     def get_jdbc_url(self) -> str:
-        print("Получить JDBC URL для ClickHouse")
         return f"jdbc:clickhouse://{self.host}:{self.http_port}/{self.database}"
     
     def get_connection_properties(self) -> Dict[str, str]:
-        print("Получить свойства подключени")
         return {
             "user": self.user,
             "password": self.password,
@@ -44,10 +39,8 @@ class ClickHouse(BaseConnection):
         }
     
     def test_connection(self) -> bool:
-        print("Проверка подключения к ClickHouse")
         return True
     
     def get_table_schema(self, db_name: str, table_name: str) -> Dict[str, Any]:
-        """Получить схему таблицы из ClickHouse"""
         print(f"Получить схему таблицы из ClickHouse для {db_name}.{table_name}")
         return {}
