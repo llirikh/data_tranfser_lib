@@ -58,7 +58,7 @@ class ClickHouse(BaseConnection):
             .load()
         )
 
-        schema_dict = {}
+        schema_dict: Dict[str, str] = {}
         for row in schema_df.collect():
             column_name = row['name']
             column_type = row['type']

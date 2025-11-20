@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Optional, Dict, Any
 from pyspark.sql import SparkSession
 
-
 class BaseConnection(ABC):
     def __init__(
         self,
