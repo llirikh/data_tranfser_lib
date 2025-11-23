@@ -7,13 +7,15 @@ from data_transfer_lib.schema.mapper import TypeMapper
 class SchemaValidator:
 
     @staticmethod
-    def validate_source_to_spark(source_schema: Dict[str, Any]) -> bool:
-        unsupported_types = []
+    def validate_source_to_spark(source_schema: Dict[str, Any]) -> bool:    
+            
+        unsupported_types: list[str] = []
         
         for column, pg_type in source_schema.items():
             base_type = pg_type.split('(')[0].strip().lower()
             spark_type = TypeMapper.postgres_to_spark(base_type)
             
+            # TODO: do it with flag
             if spark_type == "StringType" and base_type not in TypeMapper.POSTGRES_TO_SPARK:
                 unsupported_types.append(f"{column}: {pg_type}")
         
@@ -21,8 +23,6 @@ class SchemaValidator:
             error_msg = f"Error:\n Unsupported types detected: {', '.join(unsupported_types)}"
             raise SchemaValidationException(error_msg)
         
-        print("Validation succeeded")
-
         return True
     
     @staticmethod
@@ -57,8 +57,8 @@ class SchemaValidator:
             print(f"Warnings: {warning}")
         
         if errors:
-            error_msg = "Несовместимость схем:\n" + "\n".join(errors)
-            print(f"ОШИБКА: {error_msg}")
+            error_msg = "Uncompatible schemas:\n" + "\n".join(errors)
+            print(f"Error: {error_msg}")
             raise SchemaValidationException(error_msg)
         
         print("Validation is succed")
