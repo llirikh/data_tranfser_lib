@@ -1,65 +1,40 @@
-name: Create Version Bump PR
+name: Version Bump
 
 on:
-  pull_request:
-    types: [closed]
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
-  create-bump-pr:
-    if: >
-      github.event.pull_request.merged == true &&
-      startsWith(github.event.pull_request.head.ref, 'dev/')
+  bump:
     runs-on: self-hosted
 
-    permissions:
-      contents: write
-      pull-requests: write
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Calculate new version
-        id: version
+      - name: Set up git
         run: |
-          version=$(grep "version=" setup.py | sed -E 's/.*version="([0-9]+\.[0-9]+\.[0-9]+)".*/\1/')
-          IFS='.' read -r major minor patch <<< "$version"
-          patch=$((patch + 1))
-          new_version="$major.$minor.$patch"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
 
-          sed -i "s/version=\"$version\"/version=\"$new_version\"/" setup.py
-
-          echo "new=$new_version" >> $GITHUB_OUTPUT
+      - name: Bump version
+        run: |
+          CURRENT=$(grep -oP "(?<=version=\")[^\"]+" setup.py)
+          IFS='.' read -r major minor patch <<< "$CURRENT"
+          NEW_VERSION="$major.$minor.$((patch+1))"
+          sed -i "s/version=\"$CURRENT\"/version=\"$NEW_VERSION\"/" setup.py
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
       - name: Create bump branch
         run: |
-          git checkout -b version-bump/v${{ steps.version.outputs.new }}
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions@github.com"
-          git add setup.py
-          git commit -m "Bump version to ${{ steps.version.outputs.new }}"
-          git push origin version-bump/v${{ steps.version.outputs.new }}
+          BRANCH="version-bump/$NEW_VERSION"
+          git checkout -b "$BRANCH"
+          git commit -am "Bump version to $NEW_VERSION"
+          git push origin "$BRANCH"
 
       - name: Create Pull Request
-        id: pr
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: version-bump/${{ env.NEW_VERSION }}
           base: main
-          branch: version-bump/v${{ steps.version.outputs.new }}
-          title: "Version bump to ${{ steps.version.outputs.new }}"
-          body: "Automated version bump."
-
-      - name: Auto-merge PR
-        run: |
-          gh pr merge ${{ steps.pr.outputs.pull_request_number }} --merge
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          title: "Version bump to ${{ env.NEW_VERSION }}"
+          body: "Auto-generated version bump."
+          labels: auto-bump
