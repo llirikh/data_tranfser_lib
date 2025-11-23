@@ -8,6 +8,7 @@ USER root
 
 RUN apt-get update && apt-get install -y openjdk-17-jdk
 RUN python3 -m pip install pyspark==3.5.1
+RUN python3 -m pip install pytest
 
 # WORKDIR /home/jovyan/lib
 # RUN pip install -e .
