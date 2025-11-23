@@ -1,4 +1,3 @@
-from typing import Optional, Any
 from pyspark.sql import DataFrame
 from data_transfer_lib.reader.base import BaseReader
 from data_transfer_lib.connections.base import BaseConnection
@@ -27,12 +26,15 @@ class Reader(BaseReader):
         SchemaValidator.validate_source_to_spark(self.source_schema)
     
     def start(self) -> DataFrame:
-        reader = self.connection.spark.read.format("jdbc")
-        reader = reader.option("dbtable", self.table_name)
+
+        table_name = f"{self.db_name}.{self.table_name}"
         
         reader = (
-            reader
+            self.connection
+            .spark.read
+            .format("jdbc")
             .option("url", self.connection.get_jdbc_url())
+            .option("dbtable", table_name)
             .option("user", self.connection.user)
             .option("password", self.connection.password)
             .option("driver", self.connection.get_connection_properties()["driver"])

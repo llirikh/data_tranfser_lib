@@ -46,7 +46,7 @@ class Postgres(BaseConnection):
                 numeric_precision,
                 numeric_scale
             FROM information_schema.columns
-            WHERE table_schema = 'public' 
+            WHERE table_schema = '{db_name}' 
                 AND table_name = '{table_name}'
             ORDER BY ordinal_position
         """
