@@ -8,10 +8,10 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
                    and not line.startswith("#")]
 
 setup(
-    name="data_transfer_lib",
-    version="0.1.0",
-    author="Your Name",
-    author_email="your.email@example.com",
+    name="data-transfer-lib",
+    version="0.1.1",
+    author="llirikh",
+    author_email="zhukov.kg@phystech.edu",
     description="Library for data transfer between databases using PySpark",
     long_description=long_description,
     long_description_content_type="text/markdown",

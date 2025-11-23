@@ -1,41 +1,70 @@
-name: Publish to PyPI
+name: Auto version bump & Publish to PyPI
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '**'
+  pull_request:
+    types: [closed]
+    branches: [main]
 
 jobs:
   publish:
-    name: Build & Publish package
+    if: >
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'dev/')
     runs-on: self-hosted
 
-    if: contains(github.event.head_commit.message, 'Merge pull request') && contains(github.event.head_commit.message, 'dev/')
-
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
+      - name: Bump version in setup.py
+        id: bump
+        run: |
+          version=$(grep "version=" setup.py | sed -E "s/.*version=\"([0-9]+\.[0-9]+\.[0-9]+)\".*/\1/")
+          echo "Current version: $version"
+
+          IFS='.' read -r major minor patch <<< "$version"
+          patch=$((patch + 1))
+          new_version="$major.$minor.$patch"
+
+          echo "New version: $new_version"
+
+          sed -i "s/version=\"$version\"/version=\"$new_version\"/" setup.py
+
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+      - name: Commit version bump
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add setup.py
+          git commit -m "Bump version to ${{ steps.bump.outputs.new_version }}"
+          git push
+
+      - name: Create Git tag
+        run: |
+          git tag "v${{ steps.bump.outputs.new_version }}"
+          git push origin "v${{ steps.bump.outputs.new_version }}"
+
       - name: Install build tools
         run: |
-          python -m pip install --upgrade pip
+          pip install --upgrade pip
           pip install build twine
 
-      - name: Build distribution
+      - name: Build package
         run: |
           python -m build
 
-      - name: Publish to PyPI
+      - name: Upload to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           twine upload dist/*
-
